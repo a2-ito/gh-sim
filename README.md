@@ -1,5 +1,7 @@
 # gh-sim
 
+[![CI](https://github.com/a2-ito/gh-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/a2-ito/gh-sim/actions/workflows/ci.yml)
+
 GitHub Actions のワークフローを **実行せずに** ドライランするコマンドです。
 
 イベントを与えると、どのワークフローが起動し、どのジョブとステップが実行されるかを判定して表示します。Docker もネットワークも使いません。

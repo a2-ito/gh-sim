@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 同じブランチへ続けて push した場合、古い実行を打ち切る
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: gofmt の差分がないか確認する
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt が必要なファイルがあります:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go.mod と go.sum が整っているか確認する
+        run: |
+          go mod tidy
+          if ! git diff --quiet go.mod go.sum; then
+            echo "go mod tidy で差分が出ました。結果をコミットに含めてください:"
+            git diff go.mod go.sum
+            exit 1
+          fi
+
+      - run: go vet ./...
+
+      # examples/golden との比較（TestExamples）もここに含まれる
+      - name: テストを実行する
+        run: go test -race ./...
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 各プラットフォーム向けにビルドする
+        run: make dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/
+          retention-days: 7
+
+  # gh-sim 自身に、いま起きているイベントを食わせて結果を残す。
+  # ツールが実運用のワークフローで動くことを、自分の CI で確かめる。
+  self-check:
+    name: Self dry-run
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 変更ファイルの一覧を git diff で取るため履歴をすべて取る
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - run: make build
+
+      - name: 変更ファイルを調べる
+        id: changed
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$PUSH_BEFORE"
+          fi
+          # 初回 push などで比較元を辿れない場合は直前のコミットと比べる
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            base=$(git rev-parse HEAD~1 2>/dev/null || true)
+          fi
+          if [ -n "$base" ]; then
+            files=$(git diff --name-only "$base" HEAD | paste -sd, -)
+          else
+            files=""
+          fi
+          echo "比較元: ${base:-(なし)}"
+          echo "変更ファイル: ${files:-(取得できませんでした)}"
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+      # ${{ }} を run に直接埋めるとシェルへ内容がそのまま渡るため、
+      # 値は環境変数を経由して受け取る。
+      - name: このイベントで何が動くかを自分自身で判定する
+        env:
+          CHANGED: ${{ steps.changed.outputs.files }}
+        run: |
+          ./gh-sim run \
+            -event "$GITHUB_EVENT_NAME" \
+            -ref "$GITHUB_REF" \
+            -base-ref "$GITHUB_BASE_REF" \
+            -changed "$CHANGED" \
+            -repo "$GITHUB_REPOSITORY" \
+            -actor "$GITHUB_ACTOR" \
+            -sha "$GITHUB_SHA" \
+            -all -steps -notes | tee dryrun.txt
+
+      - name: 判定結果を Job Summary に残す
+        if: always()
+        run: |
+          {
+            echo "## このイベントのドライラン結果"
+            echo
+            echo '```'
+            cat dryrun.txt 2>/dev/null || echo "(判定結果を取得できませんでした)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: サンプルのシナリオをすべて実行する
+        run: make demo
