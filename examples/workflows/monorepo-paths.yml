@@ -1,0 +1,46 @@
+# 変更されたパスによって起動するかが変わるサンプル。
+#
+# -changed で変更ファイルを渡すと paths フィルタが評価されます。
+# 渡さない場合は判定を保留し、注記（-notes）に理由が出ます。
+#
+# paths の最後の要素は ! で始まる除外パターン。
+# 直前までに一致していても打ち消されます。
+name: Monorepo
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '!**/*.md'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - run: go build ./...
+      - run: go test ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test

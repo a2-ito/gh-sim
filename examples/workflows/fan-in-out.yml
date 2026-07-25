@@ -1,0 +1,52 @@
+# 依存関係が分岐して合流するサンプル。
+#
+# needs から求めたレイヤ（同時に走れるジョブの集まり）を確認できます。
+#   setup → {build-linux, build-macos} → {test-linux, test-macos} → integrate → deploy
+# のように段階が進みます。
+name: Fan
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "共通の準備"
+
+  build-linux:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - run: make build
+
+  build-macos:
+    needs: setup
+    runs-on: macos-latest
+    steps:
+      - run: make build
+
+  test-linux:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - run: make test
+
+  test-macos:
+    needs: build-macos
+    runs-on: macos-latest
+    steps:
+      - run: make test
+
+  integrate:
+    needs: [test-linux, test-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - run: make integration-test
+
+  deploy:
+    needs: integrate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh

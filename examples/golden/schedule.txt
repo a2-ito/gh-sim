@@ -1,0 +1,29 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event schedule
+
+CI  examples/workflows/ci-matrix.yml
+  ✘ 起動しない — on: に schedule がありません（定義: push, pull_request）
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✘ 起動しない — on: に schedule がありません（定義: push, workflow_dispatch）
+
+Fan  examples/workflows/fan-in-out.yml
+  ✘ 起動しない — on: に schedule がありません（定義: push, workflow_dispatch）
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✘ 起動しない — on: に schedule がありません（定義: push, pull_request）
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✔ 起動する — on.schedule に一致します
+  ├─ ✔ audit  ubuntu-latest · ステップ 4
+  └─ ✘ notify-failure  needs: audit · uses: ./.github/workflows/notify.yml
+     if が偽: failure()
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に schedule がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — on: に schedule がありません（定義: pull_request, pull_request_target）
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on: に schedule がありません（定義: push, workflow_dispatch）
+ワークフロー 8 件中 1 件が起動 · ジョブ 実行 1 件 · スキップ 1 件

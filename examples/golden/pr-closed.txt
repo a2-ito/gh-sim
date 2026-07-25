@@ -1,0 +1,26 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event pull_request -action closed -base-ref main -ref feature/x
+
+CI  examples/workflows/ci-matrix.yml
+  ✘ 起動しない — アクティビティタイプ "closed" が on.pull_request.types (opened, synchronize, reopened) に含まれていません
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+
+Fan  examples/workflows/fan-in-out.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✘ 起動しない — アクティビティタイプ "closed" が on.pull_request.types (opened, synchronize, reopened) に含まれていません
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — アクティビティタイプ "closed" が on.pull_request.types (opened, synchronize, reopened, ready_for_review) に含まれていません
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+ワークフロー 8 件中 0 件が起動 · ジョブ 実行 0 件 · スキップ 0 件

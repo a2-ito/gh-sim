@@ -1,0 +1,63 @@
+# 前段のジョブが決めた出力で後続の実行が変わるサンプル。
+#
+# 出力は run: の中で決まるため、実行しないと確定しません。
+# そのため gh-sim では ?（判定不能）と表示されます。
+#   gh-sim run -output detect.environment=production -output detect.changed=true
+# のように値を与えると判定が確定します。
+name: Deploy
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 条件を無視してデプロイする
+        type: boolean
+        default: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.name }}
+      changed: ${{ steps.diff.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: env
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/production" ]; then
+            echo "name=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=develop" >> "$GITHUB_OUTPUT"
+          fi
+      - id: diff
+        run: echo "any=true" >> "$GITHUB_OUTPUT"
+
+  deploy-develop:
+    needs: detect
+    if: needs.detect.outputs.environment == 'develop' && needs.detect.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: develop
+      url: https://dev.example.com
+    steps:
+      - run: ./deploy.sh develop
+
+  deploy-production:
+    needs: detect
+    if: needs.detect.outputs.environment == 'production' || inputs.force
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - run: ./deploy.sh production
+
+  # 依存が判定不能なので、このジョブも判定不能に連鎖する
+  notify:
+    needs: [deploy-develop, deploy-production]
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "デプロイ完了"

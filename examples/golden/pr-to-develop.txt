@@ -1,0 +1,28 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event pull_request -action opened -base-ref develop -ref feature/x
+
+CI  examples/workflows/ci-matrix.yml
+  ✘ 起動しない — develop が on.pull_request.branches (main) に一致しません
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+
+Fan  examples/workflows/fan-in-out.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✔ 起動する — on.pull_request に一致します
+  ├─ ✔ backend  ubuntu-latest · ステップ 4
+  └─ ✔ frontend  ubuntu-latest · ステップ 4
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — develop が on.pull_request.branches (main, release/**) に一致しません
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on: に pull_request がありません（定義: push, workflow_dispatch）
+ワークフロー 8 件中 1 件が起動 · ジョブ 実行 2 件 · スキップ 0 件

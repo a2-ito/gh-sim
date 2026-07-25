@@ -1,0 +1,36 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event push -ref refs/tags/v1.2
+
+CI  examples/workflows/ci-matrix.yml
+  ✘ 起動しない — on.push に branches フィルタのみが指定されているため、タグ v1.2 への push では起動しません
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✘ 起動しない — on.push に branches フィルタのみが指定されているため、タグ v1.2 への push では起動しません
+
+Fan  examples/workflows/fan-in-out.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ setup  ubuntu-latest · ステップ 1
+  ├─ ✔ build-linux  ubuntu-latest · ステップ 1 · needs: setup
+  ├─ ✔ build-macos  macos-latest · ステップ 1 · needs: setup
+  ├─ ✔ test-linux  ubuntu-latest · ステップ 1 · needs: build-linux
+  ├─ ✔ test-macos  macos-latest · ステップ 1 · needs: build-macos
+  ├─ ✔ integrate  ubuntu-latest · ステップ 1 · needs: test-linux, test-macos
+  └─ ✘ deploy  ubuntu-latest · ステップ 1 · needs: integrate
+     if が偽: github.ref == 'refs/heads/main'
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ backend  ubuntu-latest · ステップ 4
+  └─ ✔ frontend  ubuntu-latest · ステップ 4
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に push がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に push がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — on: に push がありません（定義: pull_request, pull_request_target）
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — v1.2 が on.push.tags (v[0-9]+.[0-9]+.[0-9]+) に一致しません
+ワークフロー 8 件中 2 件が起動 · ジョブ 実行 8 件 · スキップ 1 件

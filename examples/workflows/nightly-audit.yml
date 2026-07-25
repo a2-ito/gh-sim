@@ -1,0 +1,38 @@
+# 定期実行と、失敗時だけ動く通知のサンプル。
+#
+# gh-sim は「すべて成功した」と仮定して判定するため failure() は偽になり、
+# 通知ジョブはスキップと表示されます。
+# container や services も定義として読み込まれます（起動はしません）。
+name: Nightly
+on:
+  schedule:
+    - cron: '0 18 * * *'
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    container: node:20
+    services:
+      db:
+        image: postgres:16
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - name: 依存の更新を確認
+        run: npx npm-check-updates
+
+  # 再利用可能ワークフローの呼び出し。中身は展開せず呼び出しとして表示される
+  notify-failure:
+    needs: audit
+    if: failure()
+    uses: ./.github/workflows/notify.yml
+    secrets: inherit
+    with:
+      channel: '#alerts'

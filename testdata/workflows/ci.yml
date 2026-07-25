@@ -1,0 +1,63 @@
+name: CI
+on:
+  push:
+    branches: [main, 'release/**']
+    paths-ignore: ['**.md']
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  CI: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    name: Test (node ${{ matrix.node }} / ${{ matrix.os }})
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+        os: [ubuntu-latest, macos-latest]
+        exclude:
+          - node: 18
+            os: macos-latest
+        include:
+          - node: 22
+            os: ubuntu-latest
+            coverage: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm test
+      - name: Upload coverage
+        if: ${{ matrix.coverage }}
+        run: npm run coverage
+
+  deploy:
+    needs: [lint, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://example.com
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh

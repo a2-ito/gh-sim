@@ -1,0 +1,27 @@
+name: Nightly
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    container: node:20
+    services:
+      db:
+        image: postgres:16
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm audit --audit-level=high
+
+  notify:
+    needs: audit
+    if: failure()
+    uses: ./.github/workflows/notify.yml
+    secrets: inherit
+    with:
+      channel: '#alerts'

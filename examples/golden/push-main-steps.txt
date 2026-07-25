@@ -1,0 +1,116 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event push -ref main -steps
+
+CI  examples/workflows/ci-matrix.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ Lint  ubuntu-latest · ステップ 4
+  │  ├─ ✔ Run actions/checkout@v4
+  │  ├─ ✔ Run actions/setup-node@v4
+  │  ├─ ✔ Run npm ci
+  │  └─ ✔ Run npm run lint
+  ├─ ✔ test  needs: lint · matrix: node × os → 5 件
+  │  ├─ ✔ Test (node 18 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  │  ├─ ✔ Run actions/checkout@v4
+  │  │  ├─ ✔ Run actions/setup-node@v4
+  │  │  ├─ ✔ Run npm ci
+  │  │  ├─ ✔ Run npm test
+  │  │  ├─ ✘ Upload coverage
+  │  │  │  if が偽: ${{ matrix.coverage }}
+  │  │  └─ ✘ Report failure
+  │  │     if が偽: failure()
+  │  ├─ ✔ Test (node 20 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  │  ├─ ✔ Run actions/checkout@v4
+  │  │  ├─ ✔ Run actions/setup-node@v4
+  │  │  ├─ ✔ Run npm ci
+  │  │  ├─ ✔ Run npm test
+  │  │  ├─ ✘ Upload coverage
+  │  │  │  if が偽: ${{ matrix.coverage }}
+  │  │  └─ ✘ Report failure
+  │  │     if が偽: failure()
+  │  ├─ ✔ Test (node 20 / macos-latest)  macos-latest · ステップ 6
+  │  │  ├─ ✔ Run actions/checkout@v4
+  │  │  ├─ ✔ Run actions/setup-node@v4
+  │  │  ├─ ✔ Run npm ci
+  │  │  ├─ ✔ Run npm test
+  │  │  ├─ ✘ Upload coverage
+  │  │  │  if が偽: ${{ matrix.coverage }}
+  │  │  └─ ✘ Report failure
+  │  │     if が偽: failure()
+  │  ├─ ✔ Test (node 22 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  │  ├─ ✔ Run actions/checkout@v4
+  │  │  ├─ ✔ Run actions/setup-node@v4
+  │  │  ├─ ✔ Run npm ci
+  │  │  ├─ ✔ Run npm test
+  │  │  ├─ ✔ Upload coverage
+  │  │  └─ ✘ Report failure
+  │  │     if が偽: failure()
+  │  └─ ✔ Test (node 22 / macos-latest)  macos-latest · ステップ 6
+  │     ├─ ✔ Run actions/checkout@v4
+  │     ├─ ✔ Run actions/setup-node@v4
+  │     ├─ ✔ Run npm ci
+  │     ├─ ✔ Run npm test
+  │     ├─ ✘ Upload coverage
+  │     │  if が偽: ${{ matrix.coverage }}
+  │     └─ ✘ Report failure
+  │        if が偽: failure()
+  └─ ✔ deploy  ubuntu-latest · ステップ 2 · needs: lint, test
+     ├─ ✔ Run actions/checkout@v4
+     └─ ✔ Run ./deploy.sh
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ detect  ubuntu-latest · ステップ 3
+  │  ├─ ✔ Run actions/checkout@v4
+  │  ├─ ✔ Run if [ "$GITHUB_REF" = "refs/heads/production" ]; then
+  │  └─ ✔ Run echo "any=true" >> "$GITHUB_OUTPUT"
+  ├─ ? deploy-develop  ubuntu-latest · ステップ 1 · needs: detect
+  │  needs.detect.outputs.environment の値が不明です（不明なまま評価するとスキップ）
+  │  └─ ✔ Run ./deploy.sh develop
+  ├─ ? deploy-production  ubuntu-latest · ステップ 1 · needs: detect
+  │  needs.detect.outputs.environment の値が不明です（不明なまま評価するとスキップ）
+  │  └─ ✔ Run ./deploy.sh production
+  └─ ? notify  ubuntu-latest · ステップ 1 · needs: deploy-develop, deploy-production
+     依存ジョブ deploy-develop, deploy-production の判定が確定しないため
+     └─ ✔ Run echo "デプロイ完了"
+
+Fan  examples/workflows/fan-in-out.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ setup  ubuntu-latest · ステップ 1
+  │  └─ ✔ Run echo "共通の準備"
+  ├─ ✔ build-linux  ubuntu-latest · ステップ 1 · needs: setup
+  │  └─ ✔ Run make build
+  ├─ ✔ build-macos  macos-latest · ステップ 1 · needs: setup
+  │  └─ ✔ Run make build
+  ├─ ✔ test-linux  ubuntu-latest · ステップ 1 · needs: build-linux
+  │  └─ ✔ Run make test
+  ├─ ✔ test-macos  macos-latest · ステップ 1 · needs: build-macos
+  │  └─ ✔ Run make test
+  ├─ ✔ integrate  ubuntu-latest · ステップ 1 · needs: test-linux, test-macos
+  │  └─ ✔ Run make integration-test
+  └─ ✔ deploy  ubuntu-latest · ステップ 1 · needs: integrate
+     └─ ✔ Run ./deploy.sh
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✔ 起動する — on.push に一致します
+  ├─ ✔ backend  ubuntu-latest · ステップ 4
+  │  ├─ ✔ Run actions/checkout@v4
+  │  ├─ ✔ Run actions/setup-go@v5
+  │  ├─ ✔ Run go build ./...
+  │  └─ ✔ Run go test ./...
+  └─ ✔ frontend  ubuntu-latest · ステップ 4
+     ├─ ✔ Run actions/checkout@v4
+     ├─ ✔ Run actions/setup-node@v4
+     ├─ ✔ Run npm ci
+     └─ ✔ Run npm test
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に push がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に push がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — on: に push がありません（定義: pull_request, pull_request_target）
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on.push に tags フィルタのみが指定されているため、ブランチ main への push では起動しません
+ワークフロー 8 件中 4 件が起動 · ジョブ 実行 17 件 · スキップ 0 件 · 判定不能 3 件

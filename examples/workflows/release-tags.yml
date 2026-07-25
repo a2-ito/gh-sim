@@ -1,0 +1,53 @@
+# タグへの push と手動実行の両方で動くサンプル。
+#
+# tags だけを指定しているため、ブランチへの push では起動しません
+# （branches だけを指定した場合にタグで起動しないのと対称の挙動）。
+name: Release
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: リリースするバージョン
+        required: true
+        type: string
+      dry-run:
+        description: 公開せずに検証だけ行う
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+      - run: make build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # dry-run が既定で true なので、既定の手動実行ではスキップされる
+  publish:
+    needs: build
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - run: gh release create "${{ needs.build.outputs.version }}" dist/*
+
+  announce:
+    needs: publish
+    if: success() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "リリースを告知"

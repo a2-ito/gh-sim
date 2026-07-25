@@ -1,0 +1,30 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event pull_request_target -action closed -base-ref main -ref feature/x
+
+CI  examples/workflows/ci-matrix.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: push, pull_request）
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: push, workflow_dispatch）
+
+Fan  examples/workflows/fan-in-out.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: push, workflow_dispatch）
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: push, pull_request）
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✔ 起動する — on.pull_request_target に一致します
+  ├─ ✔ review  ubuntu-latest · ステップ 2
+  ├─ ✔ size-label  ubuntu-latest · ステップ 1
+  └─ ✘ cleanup  ubuntu-latest · ステップ 1
+     if が偽: github.event_name == 'pull_request_target' && github.event.pull_request.merged
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on: に pull_request_target がありません（定義: push, workflow_dispatch）
+ワークフロー 8 件中 1 件が起動 · ジョブ 実行 2 件 · スキップ 1 件

@@ -1,0 +1,26 @@
+# 再利用可能ワークフローのサンプル。
+# workflow_call だけを定義しているため、push などでは起動しません。
+name: Notify
+on:
+  workflow_call:
+    inputs:
+      channel:
+        description: 通知先のチャンネル
+        required: true
+        type: string
+      mention:
+        type: boolean
+        default: false
+    secrets:
+      SLACK_WEBHOOK:
+        required: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 通知を送る
+        run: echo "post to ${{ inputs.channel }}"
+      - name: メンションを付ける
+        if: ${{ inputs.mention }}
+        run: echo "@here"

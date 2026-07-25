@@ -1,0 +1,6 @@
+name: Bad
+on: push
+jobs:
+  broken:
+    steps:
+      - run: echo runs-on がないのでエラーになる

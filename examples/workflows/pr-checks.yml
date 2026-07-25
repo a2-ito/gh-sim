@@ -1,0 +1,35 @@
+# pull_request の types フィルタを示すサンプル。
+#
+# types を省略すると opened / synchronize / reopened だけが対象になるため、
+# closed や ready_for_review で動かしたい場合は明示する必要があります。
+# また branches フィルタは head ではなくマージ先（base）と照合されます。
+name: PR Checks
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, 'release/**']
+  pull_request_target:
+    types: [closed]
+
+jobs:
+  # ドラフトの間はレビュー用のジョブを動かさない
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run review-check
+
+  size-label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - run: echo "差分の大きさでラベルを付ける"
+
+  # マージされたときだけ後片付けする
+  cleanup:
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "プレビュー環境を削除"

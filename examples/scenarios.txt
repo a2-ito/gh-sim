@@ -1,0 +1,45 @@
+# サンプルワークフローに対して試すシナリオの一覧。
+#
+# 書き方: 1つ目のフィールドがシナリオ名、残りが gh-sim run に渡す引数。
+# 次の引数が共通で先に付くため、必要なら各行で上書きできる。
+#
+#   run -dir examples/workflows -all -notes=false
+#
+# make demo   … 各シナリオを順に実行して表示する
+# make e2e    … 出力が examples/golden/<名前>.txt と一致するか検証する
+# make e2e-update … golden を現在の出力で更新する
+
+# --- ブランチへの push ---
+push-main            -event push -ref main
+push-release-branch  -event push -ref release/1.0
+push-feature         -event push -ref feature/new-thing
+push-production      -event push -ref production
+
+# --- タグへの push ---
+push-tag             -event push -ref refs/tags/v1.2.3
+push-tag-unmatched   -event push -ref refs/tags/v1.2
+
+# --- プルリクエスト ---
+pr-opened            -event pull_request -action opened -base-ref main -ref feature/x
+pr-closed            -event pull_request -action closed -base-ref main -ref feature/x
+pr-target-closed     -event pull_request_target -action closed -base-ref main -ref feature/x
+pr-to-develop        -event pull_request -action opened -base-ref develop -ref feature/x
+
+# --- 定期実行と手動実行 ---
+schedule             -event schedule
+dispatch             -event workflow_dispatch
+dispatch-release     -event workflow_dispatch -input version=1.2.3 -input dry-run=false
+dispatch-force       -event workflow_dispatch -input force=true
+
+# --- 変更ファイルによる paths フィルタ ---
+changed-docs-only    -event push -ref main -changed README.md,docs/guide.md
+changed-backend      -event push -ref main -changed backend/main.go
+changed-mixed        -event push -ref main -changed backend/main.go,README.md
+
+# --- 出力を与えて判定を確定させる ---
+outputs-develop      -event push -ref main -output detect.environment=develop -output detect.changed=true
+outputs-production   -event push -ref production -output detect.environment=production -output detect.changed=true
+
+# --- 表示オプション ---
+push-main-steps      -event push -ref main -steps
+push-main-notes      -event push -ref main -notes

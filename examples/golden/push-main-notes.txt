@@ -1,0 +1,60 @@
+$ gh-sim run -dir examples/workflows -all -notes=false -event push -ref main -notes
+
+CI  examples/workflows/ci-matrix.yml
+  ✔ 起動する — on.push に一致します
+  ! 変更ファイルが指定されていないため on.push.paths-ignore は評価していません
+  ! イベントペイロードが未指定のため github.event は最小限の内容で補っています
+  ! secrets が未指定のため、参照はすべて null として評価されます
+  ├─ ✔ Lint  ubuntu-latest · ステップ 4
+  ├─ ✔ test  needs: lint · matrix: node × os → 5 件
+  │  ├─ ✔ Test (node 18 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  ├─ ✔ Test (node 20 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  ├─ ✔ Test (node 20 / macos-latest)  macos-latest · ステップ 6
+  │  ├─ ✔ Test (node 22 / ubuntu-latest)  ubuntu-latest · ステップ 6
+  │  └─ ✔ Test (node 22 / macos-latest)  macos-latest · ステップ 6
+  └─ ✔ deploy  ubuntu-latest · ステップ 2 · needs: lint, test
+
+Deploy  examples/workflows/deploy-gated.yml
+  ✔ 起動する — on.push に一致します
+  ! イベントペイロードが未指定のため github.event は最小限の内容で補っています
+  ! secrets が未指定のため、参照はすべて null として評価されます
+  ├─ ✔ detect  ubuntu-latest · ステップ 3
+  ├─ ? deploy-develop  ubuntu-latest · ステップ 1 · needs: detect
+  │  needs.detect.outputs.environment の値が不明です（不明なまま評価するとスキップ）
+  ├─ ? deploy-production  ubuntu-latest · ステップ 1 · needs: detect
+  │  needs.detect.outputs.environment の値が不明です（不明なまま評価するとスキップ）
+  └─ ? notify  ubuntu-latest · ステップ 1 · needs: deploy-develop, deploy-production
+     依存ジョブ deploy-develop, deploy-production の判定が確定しないため
+
+Fan  examples/workflows/fan-in-out.yml
+  ✔ 起動する — on.push に一致します
+  ! イベントペイロードが未指定のため github.event は最小限の内容で補っています
+  ! secrets が未指定のため、参照はすべて null として評価されます
+  ├─ ✔ setup  ubuntu-latest · ステップ 1
+  ├─ ✔ build-linux  ubuntu-latest · ステップ 1 · needs: setup
+  ├─ ✔ build-macos  macos-latest · ステップ 1 · needs: setup
+  ├─ ✔ test-linux  ubuntu-latest · ステップ 1 · needs: build-linux
+  ├─ ✔ test-macos  macos-latest · ステップ 1 · needs: build-macos
+  ├─ ✔ integrate  ubuntu-latest · ステップ 1 · needs: test-linux, test-macos
+  └─ ✔ deploy  ubuntu-latest · ステップ 1 · needs: integrate
+
+Monorepo  examples/workflows/monorepo-paths.yml
+  ✔ 起動する — on.push に一致します
+  ! 変更ファイルが指定されていないため on.push.paths は評価していません
+  ! イベントペイロードが未指定のため github.event は最小限の内容で補っています
+  ! secrets が未指定のため、参照はすべて null として評価されます
+  ├─ ✔ backend  ubuntu-latest · ステップ 4
+  └─ ✔ frontend  ubuntu-latest · ステップ 4
+
+Nightly  examples/workflows/nightly-audit.yml
+  ✘ 起動しない — on: に push がありません（定義: schedule, workflow_dispatch）
+
+Notify  examples/workflows/notify.yml
+  ✘ 起動しない — on: に push がありません（定義: workflow_call）
+
+PR Checks  examples/workflows/pr-checks.yml
+  ✘ 起動しない — on: に push がありません（定義: pull_request, pull_request_target）
+
+Release  examples/workflows/release-tags.yml
+  ✘ 起動しない — on.push に tags フィルタのみが指定されているため、ブランチ main への push では起動しません
+ワークフロー 8 件中 4 件が起動 · ジョブ 実行 17 件 · スキップ 0 件 · 判定不能 3 件
