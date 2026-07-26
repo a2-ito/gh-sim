@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+# gh release create にリポジトリへの書き込みが必要
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # タグを打ったコミットが壊れていないことを確かめてから配布する
+      - name: テストを実行する
+        run: go test ./...
+
+      # Makefile の VERSION を上書きし、タグ名をバイナリに埋め込む
+      - name: 各プラットフォーム向けにビルドする
+        run: make dist VERSION="$GITHUB_REF_NAME"
+
+      - name: バージョンが埋め込まれているか確認する
+        run: |
+          got=$(./dist/gh-sim_linux_amd64 version)
+          echo "$got"
+          if [ "$got" != "gh-sim $GITHUB_REF_NAME" ]; then
+            echo "埋め込まれたバージョンがタグと一致しません（期待: gh-sim $GITHUB_REF_NAME）"
+            exit 1
+          fi
+
+      # 展開結果に自分自身を含めないよう、対象を明示して集計する
+      - name: チェックサムを作る
+        run: |
+          cd dist
+          sha256sum gh-sim_* > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: リリースを作成する
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/gh-sim_* dist/SHA256SUMS \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
