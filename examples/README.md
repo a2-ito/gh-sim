@@ -12,24 +12,24 @@ make e2e-update                # golden を現在の出力で更新
 
 ## 構成
 
-| パス | 内容 |
-| --- | --- |
-| `workflows/` | サンプルのワークフロー |
+| パス            | 内容                                                |
+| --------------- | --------------------------------------------------- |
+| `workflows/`    | サンプルのワークフロー                              |
 | `scenarios.txt` | 試すイベント条件の一覧（名前＋`gh-sim run` の引数） |
-| `golden/` | 各シナリオの期待出力。`make e2e` が比較する |
+| `golden/`       | 各シナリオの期待出力。`make e2e` が比較する         |
 
 ## サンプルの意図
 
-| ファイル | 確認できること |
-| --- | --- |
-| `ci-matrix.yml` | `matrix` の直積・`exclude`・`include`、組み合わせごとに変わるステップ条件、`runs-on` と `name:` への matrix 展開 |
-| `deploy-gated.yml` | 前段の `outputs` に依存する条件が `?`（判定不能）になること。`-output` で確定させられること |
-| `release-tags.yml` | `tags` フィルタ（ブランチへの push では起動しない）、`workflow_dispatch` の入力と既定値 |
-| `monorepo-paths.yml` | `paths` フィルタと `!` による除外。`-changed` の有無で判定が変わる |
-| `pr-checks.yml` | `pull_request` の `types`（省略時は3種のみ）、`branches` がマージ先と照合されること |
-| `nightly-audit.yml` | `schedule`、`failure()` の扱い、`container` / `services`、再利用ワークフローの呼び出し |
-| `notify.yml` | `workflow_call` のみの再利用可能ワークフロー（push などでは起動しない） |
-| `fan-in-out.yml` | `needs` が分岐して合流する依存グラフ |
+| ファイル             | 確認できること                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `ci-matrix.yml`      | `matrix` の直積・`exclude`・`include`、組み合わせごとに変わるステップ条件、`runs-on` と `name:` への matrix 展開 |
+| `deploy-gated.yml`   | 前段の `outputs` に依存する条件が `?`（判定不能）になること。`-output` で確定させられること                      |
+| `release-tags.yml`   | `tags` フィルタ（ブランチへの push では起動しない）、`workflow_dispatch` の入力と既定値                          |
+| `monorepo-paths.yml` | `paths` フィルタと `!` による除外。`-changed` の有無で判定が変わる                                               |
+| `pr-checks.yml`      | `pull_request` の `types`（省略時は3種のみ）、`branches` がマージ先と照合されること                              |
+| `nightly-audit.yml`  | `schedule`、`failure()` の扱い、`container` / `services`、再利用ワークフローの呼び出し                           |
+| `notify.yml`         | `workflow_call` のみの再利用可能ワークフロー（push などでは起動しない）                                          |
+| `fan-in-out.yml`     | `needs` が分岐して合流する依存グラフ                                                                             |
 
 ## シナリオを追加する
 

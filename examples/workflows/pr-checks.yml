@@ -7,7 +7,7 @@ name: PR Checks
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [main, 'release/**']
+    branches: [main, "release/**"]
   pull_request_target:
     types: [closed]
 
